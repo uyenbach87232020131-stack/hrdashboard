@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useFilter } from '../../context/FilterContext';
 import { calculateKPIs } from '../../utils/dataProcessing';
-import { formatNumber, formatPercent } from '../../utils/formatters';
+import { formatNumber, formatPercent, formatCurrency } from '../../utils/formatters';
 import KPICard from './KPICard';
 import { Users, UserCheck, UserX, TrendingDown, Calendar, DollarSign, BarChart2, Star, Heart, BookOpen, BedDouble, Award } from 'lucide-react';
 
@@ -17,8 +17,8 @@ export default function KPIGrid() {
       <KPICard title="Turnover Rate" value={formatPercent(kpis.turnoverRate)} icon={<TrendingDown size={20} />} color="bg-gradient-to-br from-orange-500 to-orange-600" />
       
       <KPICard title="Average Age" value={formatNumber(kpis.averageAge, 1)} icon={<Calendar size={20} />} color="bg-gradient-to-br from-cyan-500 to-cyan-600" />
-      <KPICard title="Average Salary" value={formatNumber(kpis.averageSalary)} icon={<DollarSign size={20} />} color="bg-gradient-to-br from-violet-500 to-violet-600" />
-      <KPICard title="Median Salary" value={formatNumber(kpis.medianSalary)} icon={<DollarSign size={20} />} color="bg-gradient-to-br from-purple-500 to-purple-600" />
+      <KPICard title="Average Salary" value={formatCurrency(kpis.averageSalary)} icon={<DollarSign size={20} />} color="bg-gradient-to-br from-violet-500 to-violet-600" />
+      <KPICard title="Median Salary" value={formatCurrency(kpis.medianSalary)} icon={<DollarSign size={20} />} color="bg-gradient-to-br from-purple-500 to-purple-600" />
       <KPICard title="Avg Performance" value={formatNumber(kpis.averagePerformance, 2)} icon={<Star size={20} />} color="bg-gradient-to-br from-amber-500 to-amber-600" />
       
       <KPICard title="Avg Engagement" value={formatNumber(kpis.averageEngagement, 2)} icon={<Heart size={20} />} color="bg-gradient-to-br from-pink-500 to-pink-600" />

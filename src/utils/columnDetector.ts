@@ -60,15 +60,72 @@ const COLUMN_PATTERNS: Record<keyof ColumnMapping, RegExp[]> = {
   ],
 };
 
+function isNumericColumn(rawRows: Record<string, unknown>[], header: string): boolean {
+  let numericCount = 0;
+  let totalCount = 0;
+  for (const row of rawRows) {
+    const val = row[header];
+    if (val === undefined || val === null || val === '') continue;
+    totalCount++;
+    
+    // Clean from currency symbols, commas, spaces
+    const cleaned = String(val).replace(/[$\u20AC\u20AB\s,]/g, '');
+    if (cleaned !== '' && !isNaN(Number(cleaned))) {
+      numericCount++;
+    }
+  }
+  return totalCount > 0 && (numericCount / totalCount) > 0.5;
+}
+
+export function detectSalaryColumn(columns: string[], rawRows: Record<string, unknown>[]): string | undefined {
+  const candidates = [
+    /^(salary\s*\(\$\/year\))$/i,
+    /^(salary)$/i,
+    /^(annual\s*salary)$/i,
+    /^(salary_usd)$/i,
+    /^(base\s*salary)$/i,
+    /^(lương|luong|mức\s*lương|muc\s*luong)$/i
+  ];
+
+  // 1. Search for matches among the standard candidates that are numeric
+  for (const pattern of candidates) {
+    for (const col of columns) {
+      if (pattern.test(col.trim()) && isNumericColumn(rawRows, col)) {
+        return col;
+      }
+    }
+  }
+
+  // 2. Fallback: Search for any column containing "salary" (case-insensitive) that is numeric
+  for (const col of columns) {
+    if (/salary/i.test(col.trim()) && isNumericColumn(rawRows, col)) {
+      return col;
+    }
+  }
+
+  return undefined;
+}
+
 /**
  * Automatically detect and map Excel column headers to standard HR fields
  */
-export function detectColumns(headers: string[]): ColumnMapping {
+export function detectColumns(headers: string[], rawRows?: Record<string, unknown>[]): ColumnMapping {
   const mapping: ColumnMapping = {};
   const usedHeaders = new Set<string>();
 
-  // First pass: exact/regex matching
+  // 1. Detect salary column dynamically first if rawRows is available
+  if (rawRows && rawRows.length > 0) {
+    const salaryCol = detectSalaryColumn(headers, rawRows);
+    if (salaryCol) {
+      mapping.salary = salaryCol;
+      usedHeaders.add(salaryCol);
+    }
+  }
+
+  // 2. First pass: exact/regex matching for other fields
   for (const [field, patterns] of Object.entries(COLUMN_PATTERNS)) {
+    if (field === 'salary' && mapping.salary) continue; // Already mapped dynamically
+
     for (const header of headers) {
       if (usedHeaders.has(header)) continue;
       const trimmed = header.trim();

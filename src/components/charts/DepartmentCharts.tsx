@@ -32,8 +32,16 @@ export default function DepartmentCharts() {
           <BarChart data={salaryData} margin={{ bottom: 40 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="text-slate-200 dark:text-slate-700" />
             <XAxis dataKey="name" angle={-45} textAnchor="end" stroke="currentColor" className="text-slate-500 text-xs" />
-            <YAxis stroke="currentColor" className="text-slate-500 text-xs" tickFormatter={(v) => `${v/1000}k`} />
-            <Tooltip cursor={{fill: 'transparent'}} formatter={(val: number) => [val.toFixed(0), 'Avg Salary']} />
+            <YAxis 
+              stroke="currentColor" 
+              className="text-slate-500 text-xs" 
+              tickFormatter={(v) => v >= 1000 ? `${Math.round(v/1000)}k` : `$${v}`}
+              domain={['auto', 'auto']}
+            />
+            <Tooltip 
+              cursor={{fill: 'transparent'}} 
+              formatter={(val: number) => [`$${Math.round(val).toLocaleString()}/year`, 'Avg Salary']} 
+            />
             <Bar dataKey="value" fill={COLORS[1]} radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>

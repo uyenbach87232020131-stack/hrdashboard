@@ -26,7 +26,35 @@ export function parseEmployee(
   const getNumber = (field: keyof ColumnMapping): number | null => {
     const col = mapping[field];
     if (!col || row[col] === undefined || row[col] === null || row[col] === '') return null;
-    const num = Number(row[col]);
+    const val = row[col];
+    if (typeof val === 'number') return val;
+    
+    let cleaned = String(val).trim();
+    // Remove currency symbols ($, €, ₫, etc.) and spaces
+    cleaned = cleaned.replace(/[$\u20AC\u20AB\s]/g, '');
+    
+    if (!cleaned) return null;
+
+    if (field === 'salary') {
+      // For salary, handle dot as thousand separator in Vietnamese/European format
+      if (/,(\d{1,2})$/.test(cleaned)) {
+        // Vietnamese/European format: e.g., 72.450,00 -> remove dots, replace comma with dot
+        cleaned = cleaned.replace(/\./g, '').replace(/,/g, '.');
+      } else if (/,/.test(cleaned) && !/\./.test(cleaned)) {
+        // English thousand separator: e.g. 72,450 -> remove commas
+        cleaned = cleaned.replace(/,/g, '');
+      } else if (/\./.test(cleaned) && !/,/.test(cleaned)) {
+        // If there's a dot followed by exactly 3 digits at the end (e.g. 72.450 or 1.200.500)
+        if (/\.(\d{3})$/.test(cleaned)) {
+          cleaned = cleaned.replace(/\./g, '');
+        }
+      }
+    } else {
+      // General numeric parsing: remove commas (thousands separator)
+      cleaned = cleaned.replace(/,/g, '');
+    }
+    
+    const num = Number(cleaned);
     return isNaN(num) ? null : num;
   };
 
